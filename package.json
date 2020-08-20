@@ -4,7 +4,8 @@
   "description": "letzb",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon config.server"
+    "start": "node config.server",
+    "start:dev": "nodemon config.server"
   },
   "author": "",
   "license": "ISC",
