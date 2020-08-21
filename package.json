@@ -5,8 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node config.server",
-    "start:dev": "nodemon config.server",
-    "heroku-postbuild": "NPM_CONFIG_PRODUCTION=false npm install --prefix client && npm run build --prefix client"
+    "start:dev": "nodemon config.server"
   },
   "author": "",
   "license": "ISC",
@@ -37,5 +36,8 @@
     "passport": "^0.4.1",
     "twilio": "^3.43.0",
     "underscore": "^1.10.2"
+  },
+  "engines": {
+    "node": "12.18.3"
   }
 }
