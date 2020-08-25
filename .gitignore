@@ -4,3 +4,4 @@ app.log
 .vscode
 config/local.json
 uploads/*
+.env
