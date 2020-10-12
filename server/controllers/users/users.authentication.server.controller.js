@@ -664,7 +664,11 @@ exports.appleSignin = async (req, res, next) => {
   try {
     let token = req.body.access_token || req.query.access_token,
       deviceToken = req.body.deviceToken || req.query.deviceToken,
-      deviceType = req.body.deviceType || req.query.deviceType,
+      deviceType = req.body.user || req.query.user,
+      userId = req.body.userId || req.query.userId,
+      givenName = req.body.givenName || req.query.givenName,
+      familyName = req.body.familyName || req.query.familyName,
+      email = req.body.email || req.query.email,
       location = req.body.location;
 
     if (!token) {
@@ -673,167 +677,47 @@ exports.appleSignin = async (req, res, next) => {
         .json({ success: false, message: "No Token Found." });
     }
 
-    try {
-      const { sub: userAppleId } = await appleSignin.verifyIdToken(token, {
-        // Optional Options for further verification - Full list can be found here https://github.com/auth0/node-jsonwebtoken#jwtverifytoken-secretorpublickey-options-callback
-        audience: 'com.crowdbotics.letzb', // client id - can also be an array
-        // nonce: 'NONCE', // nonce // Check this note if coming from React Native AS RN automatically SHA256-hashes the nonce https://github.com/invertase/react-native-apple-authentication#nonce
-        // If you want to handle expiration on your own, or if you want the expired tokens decoded
-        ignoreExpiration: true, // default is false
-      });
-      console.log('testing apple login', userAppleId)
-      res.send(userAppleId)
-    } catch (err) {
-      // Token is not verified
-      console.error(err);
+    if(email && givenName && familyName && userId){
+      console.log('inside if **************');
+      // Register a new user
+      let userToCreate = {
+        email: email,
+        deviceDetails: {
+            devicedeviceType: deviceType,
+            deviceToken: deviceToken
+        },
+        appleProvider: {
+            id: userId,
+            token: token,
+            givenName: givenName,
+            familyName: familyName
+        },
+    }
+        userToCreate.firstName = givenName
+        userToCreate.lastName = familyName
+    let newUser = await models.users(userToCreate);
+    const userResponse = await newUser.save();
+    res.status(200).send({
+      		success: true,
+          message: "User created successfully",
+          data: {newUser: true, userResponse}
+      	})
+    }else {
+      const userResponse = await models.users.findOne({ "appleProvider.id": userId })
+      if(!userResponse){
+        return res.status(200).send({
+          success: false,
+          message: "No user found",
+          data: []
+        })
+      }
+      res.status(200).send({
+        success: true,
+        message: "User found successfully",
+        data: {newUser: false, userResponse}
+      })
     }
 
-
-    // const options = {
-    //   clientID: "com.crowdbotics.letzb", // Apple Client ID
-    //   redirectUri: "http://localhost:5000/auth/apple",
-    //   // OPTIONAL
-    //   state: "try_to_guess_it", // optional, An unguessable random string. It is primarily used to protect against CSRF attacks.
-    //   responseMode: "form_post", // Force set to form_post if scope includes 'email'
-    //   scope: "email", // optional
-    // };
-
-    // const authorizationUrl = appleSignin.getAuthorizationUrl(options);
-
-    // console.log("authorization apple test", authorizationUrl);
-    // res.send(authorizationUrl);
-
-    // FB.api(
-    //   "me",
-    //   { fields: ["name", "id", "email"], access_token: token },
-    //   function (userInfo) {
-    //     if (userInfo.error) {
-    //       return res.status(401).send(userInfo.error);
-    //     } else {
-    //       User.upsertFbUser(
-    //         token,
-    //         userInfo,
-    //         {
-    //           deviceType,
-    //           token: deviceToken,
-    //         },
-    //         async function (err, user) {
-    //           if (err) {
-    //             return res.status(400).send({
-    //               message: errorHandler.getErrorMessage(err),
-    //             });
-    //           } else {
-    //             // console.log(user)
-    //             // console.log(userInfo)
-
-    //             let displayName = userInfo.name;
-    //             let input = displayName.split(" ");
-
-    //             let fName = input[0],
-    //               lName = input[1];
-    //             let updateName = await models.users.findOneAndUpdate(
-    //               { "facebookProvider.id": userInfo.id },
-    //               {
-    //                 $set: {
-    //                   firstName: fName,
-    //                   lastName: lName,
-    //                   fullName: userInfo.name,
-    //                 },
-    //               },
-    //               { new: true }
-    //             );
-
-    //             let jsonToUPdate = {};
-
-    //             if (deviceType && deviceToken) {
-    //               jsonToUPdate["$push"] = {
-    //                 deviceDetails: {
-    //                   deviceType: deviceType,
-    //                   deviceToken: deviceToken,
-    //                 },
-    //               };
-    //             }
-    //             if (location && location.latitude && location.longitude) {
-    //               jsonToUPdate["$set"] = {
-    //                 locationLongLat: {
-    //                   type: "Point",
-    //                   coordinates: [location.longitude, location.latitude],
-    //                 },
-    //                 // location : "Test Location Change" // TODO GET the Location from Geocoding API
-    //               };
-    //             }
-    //             // console.log(jsonToUPdate)
-
-    //             if (Object.keys(jsonToUPdate).length > 0) {
-    //               userHere = await models.users.findOneAndUpdate(
-    //                 { "facebookProvider.id": userInfo.id },
-    //                 jsonToUPdate,
-    //                 { new: true }
-    //               );
-    //             }
-
-    //             let token = createToken(userHere);
-
-    //             let id = updateName._id.toString();
-    //             //firebase cloud link
-    //             let db = admin.firestore();
-
-    //             var docRef = await db.collection("tokens").doc(id);
-
-    //             let getDoc = docRef
-    //               .get()
-    //               .then((doc) => {
-    //                 if (!doc.exists) {
-    //                   let addNewUser = db
-    //                     .collection("tokens")
-    //                     .doc(id)
-    //                     .set({
-    //                       deviceTokens: admin.firestore.FieldValue.arrayUnion(
-    //                         deviceToken
-    //                       ),
-    //                     });
-    //                 } else {
-    //                   let here = db
-    //                     .collection("tokens")
-    //                     .doc(doc.id)
-    //                     .update({
-    //                       deviceTokens: admin.firestore.FieldValue.arrayUnion(
-    //                         deviceToken
-    //                       ),
-    //                     });
-    //                 }
-    //               })
-    //               .catch((err) => {
-    //                 console.log("Error getting document", err);
-    //               });
-
-    //             res.status(200).send({
-    //               success: true,
-    //               message: "Signed In Successfully.",
-    //               data: {
-    //                 firstName: userHere.firstName,
-    //                 lastName: userHere.lastName,
-    //                 fullName: userHere.fullName || "",
-    //                 token: token,
-    //                 email: userHere.email,
-    //                 username: userHere.username || "",
-    //                 phoneNumber: userHere.phoneNumber || "",
-    //                 roles: userHere.roles,
-    //                 birthday: userHere.token || "",
-    //                 venueName: userHere.venueName || "",
-    //                 hasAnsweredQuestions:
-    //                   userHere.hasAnsweredQuestions || false,
-    //                 location: userHere.location || "",
-    //                 userId: userHere._id,
-    //                 subscriptionType: userHere.subscriptionType,
-    //               },
-    //             });
-    //           }
-    //         }
-    //       );
-    //     }
-    //   }
-    // );
   } catch (error) {
     response.status(500).send({
       success: false,

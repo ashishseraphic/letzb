@@ -100,6 +100,15 @@ let UserSchema = new Schema({
     },
     select: false,
   },
+  appleProvider: {
+    type: {
+      id: String,
+      token: String,
+      displayName: String,
+      gender: String,
+    },
+    select: false,
+  },
   salt: {
     type: String,
   },
