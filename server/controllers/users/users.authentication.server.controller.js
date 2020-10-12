@@ -695,6 +695,41 @@ exports.appleSignin = async (req, res, next) => {
     }
         userToCreate.firstName = givenName
         userToCreate.lastName = familyName
+        
+
+        let db = admin.firestore();
+        var docRef = await db.collection("tokens").doc(userId);
+
+                let getDoc = docRef
+                  .get()
+                  .then((doc) => {
+                    if (!doc.exists) {
+                      let addNewUser = db
+                        .collection("tokens")
+                        .doc(userId)
+                        .set({
+                          deviceTokens: admin.firestore.FieldValue.arrayUnion(
+                            deviceToken
+                          ),
+                        });
+                    } else {
+                      let here = db
+                        .collection("tokens")
+                        .doc(doc.userId)
+                        .update({
+                          deviceTokens: admin.firestore.FieldValue.arrayUnion(
+                            deviceToken
+                          ),
+                        });
+                    }})
+        db
+                        .collection("tokens")
+                        .doc(userId)
+                        .set({
+                          deviceTokens: admin.firestore.FieldValue.arrayUnion(
+                            deviceToken
+                          ),
+                        });
     let newUser = await models.users(userToCreate);
     const userResponse = await newUser.save();
     res.status(200).send({
