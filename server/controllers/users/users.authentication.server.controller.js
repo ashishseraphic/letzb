@@ -722,14 +722,14 @@ exports.appleSignin = async (req, res, next) => {
                           ),
                         });
                     }})
-        db
-                        .collection("tokens")
-                        .doc(userId)
-                        .set({
-                          deviceTokens: admin.firestore.FieldValue.arrayUnion(
-                            deviceToken
-                          ),
-                        });
+        // db
+        //                 .collection("tokens")
+        //                 .doc(userId)
+        //                 .set({
+        //                   deviceTokens: admin.firestore.FieldValue.arrayUnion(
+        //                     deviceToken
+        //                   ),
+        //                 });
     let newUser = await models.users(userToCreate);
     const userResponse = await newUser.save();
     res.status(200).send({
