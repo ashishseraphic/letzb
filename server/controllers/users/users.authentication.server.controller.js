@@ -677,82 +677,74 @@ exports.appleSignin = async (req, res, next) => {
         .json({ success: false, message: "No Token Found." });
     }
 
-    if(email && givenName && familyName && userId){
-      console.log('inside if **************');
+    if (email && givenName && familyName && userId) {
+      console.log("inside if **************");
       // Register a new user
       let userToCreate = {
         email: email,
         deviceDetails: {
-            devicedeviceType: deviceType,
-            deviceToken: deviceToken
+          devicedeviceType: deviceType,
+          deviceToken: deviceToken,
         },
         appleProvider: {
-            id: userId,
-            token: token,
-            givenName: givenName,
-            familyName: familyName
+          id: userId,
+          token: token,
+          givenName: givenName,
+          familyName: familyName,
         },
-    }
-        userToCreate.firstName = givenName
-        userToCreate.lastName = familyName
-        
+      };
+      userToCreate.firstName = givenName;
+      userToCreate.lastName = familyName;
 
-        let db = admin.firestore();
-        var docRef = await db.collection("tokens").doc(userId);
+      let db = admin.firestore();
+      var docRef = await db.collection("tokens").doc(userId);
 
-                let getDoc = docRef
-                  .get()
-                  .then((doc) => {
-                    if (!doc.exists) {
-                      let addNewUser = db
-                        .collection("tokens")
-                        .doc(userId)
-                        .set({
-                          deviceTokens: admin.firestore.FieldValue.arrayUnion(
-                            deviceToken
-                          ),
-                        });
-                    } else {
-                      let here = db
-                        .collection("tokens")
-                        .doc(doc.userId)
-                        .update({
-                          deviceTokens: admin.firestore.FieldValue.arrayUnion(
-                            deviceToken
-                          ),
-                        });
-                    }})
-        // db
-        //                 .collection("tokens")
-        //                 .doc(userId)
-        //                 .set({
-        //                   deviceTokens: admin.firestore.FieldValue.arrayUnion(
-        //                     deviceToken
-        //                   ),
-        //                 });
-    let newUser = await models.users(userToCreate);
-    const userResponse = await newUser.save();
-    res.status(200).send({
-      		success: true,
-          message: "User created successfully",
-          data: {newUser: true, userResponse}
-      	})
-    }else {
-      const userResponse = await models.users.findOne({ "appleProvider.id": userId })
-      if(!userResponse){
+      let getDoc = docRef.get().then((doc) => {
+        if (!doc.exists) {
+          let addNewUser = db
+            .collection("tokens")
+            .doc(userId)
+            .set({
+              deviceTokens: admin.firestore.FieldValue.arrayUnion(deviceToken),
+            });
+        } else {
+          let here = db
+            .collection("tokens")
+            .doc(doc.userId)
+            .update({
+              deviceTokens: admin.firestore.FieldValue.arrayUnion(deviceToken),
+            });
+        }
+      });
+      db.collection("tokens")
+        .doc(userId)
+        .set({
+          deviceTokens: admin.firestore.FieldValue.arrayUnion(deviceToken),
+        });
+      let newUser = await models.users(userToCreate);
+      const userResponse = await newUser.save();
+      res.status(200).send({
+        success: true,
+        message: "User created successfully",
+        data: { newUser: true, userResponse },
+      });
+    } else {
+      const userResponse = await models.users.findOne({
+        "appleProvider.id": userId,
+      });
+      if (!userResponse) {
         return res.status(200).send({
           success: false,
           message: "No user found",
-          data: []
-        })
+          data: [],
+        });
       }
       res.status(200).send({
         success: true,
         message: "User found successfully",
-        data: {newUser: false, userResponse}
-      })
+        data: { newUser: false, userResponse },
+      });
     }
-
   } catch (error) {
     response.status(500).send({
       success: false,
