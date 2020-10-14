@@ -726,7 +726,8 @@ exports.appleSignin = async (req, res, next) => {
       res.status(200).send({
         success: true,
         message: "User created successfully",
-        data: { newUser: true, ...userResponse },
+        // data: { newUser: true, userResponse },
+        data: userResponse,
       });
     } else {
       const userResponse = await models.users.findOne({
@@ -742,7 +743,8 @@ exports.appleSignin = async (req, res, next) => {
       res.status(200).send({
         success: true,
         message: "User found successfully",
-        data: { newUser: false, ...userResponse },
+        // data: { newUser: false, userResponse },
+        data: userResponse,
       });
     }
   } catch (error) {
