@@ -664,7 +664,7 @@ exports.appleSignin = async (req, res, next) => {
   try {
     let token = req.body.access_token || req.query.access_token,
       deviceToken = req.body.deviceToken || req.query.deviceToken,
-      deviceType = req.body.user || req.query.user,
+      deviceType = req.body.deviceType || req.query.deviceType,
       userId = req.body.userId || req.query.userId,
       givenName = req.body.givenName || req.query.givenName,
       familyName = req.body.familyName || req.query.familyName,
@@ -696,26 +696,33 @@ exports.appleSignin = async (req, res, next) => {
       userToCreate.firstName = givenName;
       userToCreate.lastName = familyName;
 
-      let db = admin.firestore();
-      var docRef = await db.collection("tokens").doc(userId);
+      if (deviceType && deviceToken) {
+        jsonToUPdate["$push"] = {
+          deviceDetails: {
+            deviceType: deviceType,
+            deviceToken: deviceToken,
+          },
+        };
+      }
+      if (location && location.latitude && location.longitude) {
+        jsonToUPdate["$set"] = {
+          locationLongLat: {
+            type: "Point",
+            coordinates: [location.longitude, location.latitude],
+          },
+          // location : "Test Location Change" // TODO GET the Location from Geocoding API
+        };
+      }
+      // console.log(jsonToUPdate)
 
-      let getDoc = docRef.get().then((doc) => {
-        if (!doc.exists) {
-          let addNewUser = db
-            .collection("tokens")
-            .doc(userId)
-            .set({
-              deviceTokens: admin.firestore.FieldValue.arrayUnion(deviceToken),
-            });
-        } else {
-          let here = db
-            .collection("tokens")
-            .doc(doc.userId)
-            .update({
-              deviceTokens: admin.firestore.FieldValue.arrayUnion(deviceToken),
-            });
-        }
-      });
+      // if (Object.keys(jsonToUPdate).length > 0) {
+      //   userHere = await models.users.findOneAndUpdate(
+      //     { "facebookProvider.id": userInfo.id },
+      //     jsonToUPdate,
+      //     { new: true }
+      //   );
+      // }
+
       // db.collection("tokens")
       //   .doc(userId)
       //   .set({
@@ -723,6 +730,31 @@ exports.appleSignin = async (req, res, next) => {
       //   });
       let newUser = await models.users(userToCreate);
       const userResponse = await newUser.save();
+      let jwttoken = createToken(userResponse);
+
+      let id = userResponse._id.toString();
+
+      let db = admin.firestore();
+      var docRef = await db.collection("tokens").doc(id);
+
+      let getDoc = docRef.get().then((doc) => {
+        if (!doc.exists) {
+          let addNewUser = db
+            .collection("tokens")
+            .doc(id)
+            .set({
+              deviceTokens: admin.firestore.FieldValue.arrayUnion(deviceToken),
+            });
+        } else {
+          let here = db
+            .collection("tokens")
+            .doc(doc.id)
+            .update({
+              deviceTokens: admin.firestore.FieldValue.arrayUnion(deviceToken),
+            });
+        }
+      });
+      userResponse.token = jwttoken;
       res.status(200).send({
         success: true,
         message: "User created successfully",
