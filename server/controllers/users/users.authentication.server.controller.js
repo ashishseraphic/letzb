@@ -696,23 +696,23 @@ exports.appleSignin = async (req, res, next) => {
       userToCreate.firstName = givenName;
       userToCreate.lastName = familyName;
 
-      if (deviceType && deviceToken) {
-        jsonToUPdate["$push"] = {
-          deviceDetails: {
-            deviceType: deviceType,
-            deviceToken: deviceToken,
-          },
-        };
-      }
-      if (location && location.latitude && location.longitude) {
-        jsonToUPdate["$set"] = {
-          locationLongLat: {
-            type: "Point",
-            coordinates: [location.longitude, location.latitude],
-          },
-          // location : "Test Location Change" // TODO GET the Location from Geocoding API
-        };
-      }
+      // if (deviceType && deviceToken) {
+      //   jsonToUPdate["$push"] = {
+      //     deviceDetails: {
+      //       deviceType: deviceType,
+      //       deviceToken: deviceToken,
+      //     },
+      //   };
+      // }
+      // if (location && location.latitude && location.longitude) {
+      //   jsonToUPdate["$set"] = {
+      //     locationLongLat: {
+      //       type: "Point",
+      //       coordinates: [location.longitude, location.latitude],
+      //     },
+      //     // location : "Test Location Change" // TODO GET the Location from Geocoding API
+      //   };
+      // }
       // console.log(jsonToUPdate)
 
       // if (Object.keys(jsonToUPdate).length > 0) {
