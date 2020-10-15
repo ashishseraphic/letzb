@@ -762,9 +762,13 @@ exports.appleSignin = async (req, res, next) => {
         data: userResponse,
       });
     } else {
-      const userResponse = await models.users.findOne({
-        "appleProvider.id": userId,
-      });
+      const userResponse = await models.users
+        .findOne({
+          "appleProvider.id": userId,
+        })
+        .select(
+          "locationLongLat email isEmailVerified isMobileVerified profileImages roles hasAnsweredQuestions subscriptionType deviceDetails appleProvider firstName lastName"
+        );
       if (!userResponse) {
         return res.status(200).send({
           success: false,
