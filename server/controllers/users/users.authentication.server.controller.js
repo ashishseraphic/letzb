@@ -759,7 +759,7 @@ exports.appleSignin = async (req, res, next) => {
       // responseToSend._doc.token = jwttoken;
       res.status(200).send({
         success: true,
-        message: "User created successfully",
+        message: "Signed up successfully",
         // data: { newUser: true, userResponse },
         data: userResponse,
       });
@@ -778,7 +778,7 @@ exports.appleSignin = async (req, res, next) => {
       userResponse._doc.token = jwttoken;
       res.status(200).send({
         success: true,
-        message: "User found successfully",
+        message: "Signed in successfully",
         // data: { newUser: false, userResponse },
         data: userResponse,
       });
