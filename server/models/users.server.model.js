@@ -104,7 +104,7 @@ let UserSchema = new Schema({
     type: {
       id: String,
       token: String,
-      displayName: String,
+      givenName: String,
       gender: String,
     },
     select: false,
