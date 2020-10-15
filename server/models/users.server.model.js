@@ -107,7 +107,6 @@ let UserSchema = new Schema({
       givenName: String,
       gender: String,
     },
-    select: false,
   },
   salt: {
     type: String,

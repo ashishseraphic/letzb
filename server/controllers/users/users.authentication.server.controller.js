@@ -754,7 +754,9 @@ exports.appleSignin = async (req, res, next) => {
             });
         }
       });
-      userResponse.token = jwttoken;
+      userResponse._doc.token = jwttoken;
+      // responseToSend = userResponse;
+      // responseToSend._doc.token = jwttoken;
       res.status(200).send({
         success: true,
         message: "User created successfully",
@@ -762,13 +764,9 @@ exports.appleSignin = async (req, res, next) => {
         data: userResponse,
       });
     } else {
-      const userResponse = await models.users
-        .findOne({
-          "appleProvider.id": userId,
-        })
-        .select(
-          "locationLongLat email isEmailVerified isMobileVerified profileImages roles hasAnsweredQuestions subscriptionType deviceDetails appleProvider firstName lastName"
-        );
+      const userResponse = await models.users.findOne({
+        "appleProvider.id": userId,
+      });
       if (!userResponse) {
         return res.status(200).send({
           success: false,
@@ -776,6 +774,8 @@ exports.appleSignin = async (req, res, next) => {
           data: [],
         });
       }
+      let jwttoken = createToken(userResponse);
+      userResponse._doc.token = jwttoken;
       res.status(200).send({
         success: true,
         message: "User found successfully",
